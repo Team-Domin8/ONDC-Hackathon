@@ -2,20 +2,24 @@
 import 'package:flutter/material.dart';
 import 'package:ondc/model/lesson.dart';
 import 'package:ondc/screens/detail_page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AppHomePage extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return new MaterialApp(
-      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
       theme: new ThemeData(
           primaryColor: Color.fromRGBO(58, 66, 86, 1.0), fontFamily: 'Raleway'),
-      home: new ListPage(title: 'Lessons'),
+      home: new ListPage(title: 'Businesses'),
       // home: DetailPage(),
     );
   }
 }
+
+
 
 class ListPage extends StatefulWidget {
   ListPage({required this.title});
@@ -29,11 +33,28 @@ class ListPage extends StatefulWidget {
 class _ListPageState extends State<ListPage> {
   late List lessons;
 
+  Map mapResponse = Map();
+
+  Future apicall() async {
+    http.Response response;
+    response = await http.get(Uri.parse(
+        "https://api.test.esamudaay.com/api/v1/businesses/0635ecff-8fde-4185-8cd8-167efda42bbc?format=json"));
+    if (response.statusCode == 200) {
+      setState(() {
+        //stringResponse = response.body;
+        mapResponse = json.decode(response.body);
+      });
+    }
+  }
+
   @override
   void initState() {
-    lessons = getLessons();
+    apicall();
+    lessons = getLessons(mapResponse['business_name'].toString());
     super.initState();
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -45,10 +66,10 @@ class _ListPageState extends State<ListPage> {
             decoration: new BoxDecoration(
                 border: new Border(
                     right: new BorderSide(width: 1.0, color: Colors.white24))),
-            child: Icon(Icons.autorenew, color: Colors.white),
+            child: Icon(Icons.business, color: Colors.white),
           ),
           title: Text(
-            lesson.title,
+            mapResponse['business_name'].toString(),
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           // subtitle: Text("Intermediate", style: TextStyle(color: Colors.white)),
@@ -152,10 +173,10 @@ class _ListPageState extends State<ListPage> {
   }
 }
 
-List getLessons() {
+List getLessons(String title) {
   return [
     Lesson(
-        title: "Introduction to Driving",
+        title: title,
         level: "Beginner",
         indicatorValue: 0.33,
         price: 20,
